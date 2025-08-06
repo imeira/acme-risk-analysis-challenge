@@ -30,6 +30,12 @@ public class SecurityConfig {
                 .requestMatchers("/decision-engine/health").permitAll()
                 .requestMatchers("/actuator/**").permitAll()
                 .requestMatchers("/h2-console/**").permitAll() // Para desenvolvimento
+                // Permitir acesso público ao Swagger UI e documentação OpenAPI
+                .requestMatchers("/swagger-ui/**").permitAll()
+                .requestMatchers("/swagger-ui.html").permitAll()
+                .requestMatchers("/v3/api-docs/**").permitAll()
+                .requestMatchers("/swagger-resources/**").permitAll()
+                .requestMatchers("/webjars/**").permitAll()
                 .anyRequest().authenticated()
             )
             .headers(headers -> headers.frameOptions().disable()) // Para H2 Console

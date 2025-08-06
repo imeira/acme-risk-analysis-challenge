@@ -1,32 +1,99 @@
-# ACME Risk Analysis Challenge
+# ACME Risk Analysis
 
-## Descrição
+## Visão Geral
 
-Este projeto implementa uma solução de análise de risco de transações financeiras baseada em microsserviços, desenvolvida em Java 17 com Spring Boot e Docker.
+Esta solução implementa um sistema de análise de risco de transações financeiras baseado em microsserviços, utilizando **Arquitetura Hexagonal (Ports and Adapters)** e **autenticação JWT** para comunicação segura entre serviços. Desenvolvida em Java 17 com Spring Boot e Docker.
 
 ## Arquitetura
 
-A solução é composta por três microsserviços principais:
+### Modulos do Sistema
+
+A solução é composta por três modulos principais:
 
 1. **Risk Analysis Service** (Porta 8080): Orquestra o fluxo de análise de risco
 2. **Lists Service** (Porta 8081): Gerencia listas permissivas e restritivas
 3. **Decision Engine Service** (Porta 8082): Aplica regras de negócio e calcula score de risco
 
+
+### Princípios da Arquitetura Hexagonal
+
+A solução foi desenvolvida para seguir os princípios da Arquitetura Hexagonal, onde:
+
+- **Domínio Central**: Contém a lógica de negócio pura, independente de frameworks e tecnologias externas
+- **Portas (Ports)**: Interfaces que definem contratos de entrada e saída
+- **Adaptadores (Adapters)**: Implementações concretas que conectam o domínio ao mundo externo
+
+### Estrutura dos Serviços
+
+Cada microsserviço segue a estrutura hexagonal:
+
+```
+src/main/java/com/acme/[service]/
+├── application/          # Camada de aplicação
+│   ├── port/            # Portas de entrada e saída
+│   └── service/         # Serviços de aplicação (orquestração)
+├── domain/              # Camada de domínio (lógica de negócio)
+│   ├── model/           # Entidades de domínio
+│   └── service/         # Serviços de domínio
+├── infrastructure/      # Camada de infraestrutura
+│   ├── adapter/         # Adaptadores de saída
+│   ├── controller/      # Adaptadores de entrada (REST)
+│   ├── config/          # Configurações
+│   └── security/        # Componentes de segurança JWT
+└── common/              # DTOs e classes comuns
+```
+
+## Microsserviços
+
+### 1. Risk Analysis Service (Porta 8080)
+- **Responsabilidade**: Orquestrador principal do fluxo de análise de risco
+- **Portas de Entrada**: `RiskAnalysisPort`
+- **Portas de Saída**: `ListsServicePort`, `DecisionEngineServicePort`
+- **Segurança**: Gera tokens JWT para comunicação com outros serviços
+
+### 2. Lists Service (Porta 8081)
+- **Responsabilidade**: Gerencia listas permissivas e restritivas
+- **Portas de Entrada**: `ListsPort`
+- **Portas de Saída**: `ListsRepositoryPort`
+- **Segurança**: Valida tokens JWT recebidos
+
+### 3. Decision Engine Service (Porta 8082)
+- **Responsabilidade**: Aplica regras de negócio e calcula score de risco
+- **Portas de Entrada**: `DecisionEnginePort`
+- **Portas de Saída**: `RuleRepositoryPort`
+- **Segurança**: Valida tokens JWT recebidos
+
+## Segurança JWT
+
+### Implementação
+- **Chave Secreta**: Compartilhada entre todos os serviços
+- **Geração**: Risk Analysis Service gera tokens para chamadas internas
+- **Validação**: Lists Service e Decision Engine Service validam tokens recebidos
+- **Filtros**: `JwtAuthenticationFilter` intercepta e valida requisições
+
+### Fluxo de Autenticação
+1. Risk Analysis Service recebe requisição externa (sem JWT)
+2. Gera token JWT para chamadas internas
+3. Inclui token no header `Authorization: Bearer <token>`
+4. Serviços de destino validam o token antes de processar
+
 ## Tecnologias Utilizadas
 
-- Java 17
-- Spring Boot 3.2.0
-- Maven
-- Docker & Docker Compose
-- H2 Database (em memória)
-- Lombok
+- **Java 17**
+- **Spring Boot 3.2.0**
+- **Spring Security** (para JWT)
+- **Spring Data JPA** (Decision Engine Service)
+- **H2 Database** (em memória)
+- **Maven** (gerenciamento de dependências)
+- **Docker & Docker Compose**
+- **JWT (JSON Web Tokens)** - biblioteca `jjwt`
 
-## Como Executar
+## Execução
 
 ### Pré-requisitos
-
-- Docker
-- Docker Compose
+- Docker e Docker Compose instalados
+- Java 17+ (para desenvolvimento local)
+- Maven 3.6+ (para desenvolvimento local)
 
 ### Executando a aplicação
 
@@ -45,6 +112,101 @@ docker-compose up --build
 - Risk Analysis Service: http://localhost:8080/risk-analysis/health
 - Lists Service: http://localhost:8081/lists/health
 - Decision Engine Service: http://localhost:8082/decision-engine/health
+
+### Executar com Docker Compose
+
+```bash
+# Construir e executar todos os serviços
+docker-compose up --build
+
+# Executar em background
+docker-compose up -d --build
+
+# Parar os serviços
+docker-compose down
+```
+
+### Executar Localmente (Desenvolvimento)
+
+```bash
+# Terminal 1 - Decision Engine Service
+cd decision-engine-service
+mvn spring-boot:run
+
+# Terminal 2 - Lists Service
+cd lists-service
+mvn spring-boot:run
+
+# Terminal 3 - Risk Analysis Service
+cd risk-analysis-service
+mvn spring-boot:run
+```
+
+## Parar a Aplicação
+
+```bash
+docker-compose down
+```
+
+
+## Testes
+
+### Script de Teste Automatizado
+
+```bash
+# jq (JSON Query) e curl (HTTP Client) devem estar instalados
+
+# Executar testes das doc do Swagger
+./test_swagger.sh
+
+# Executar testes das APIs
+./test_api.sh
+
+# Executar testes das APIs com JWT
+./test_api_jwt.sh
+```
+
+### Testes Manuais
+
+#### 1. Análise de Risco (Endpoint Principal)
+```bash
+curl -X POST http://localhost:8080/risk-analysis \
+  -H "Content-Type: application/json" \
+  -d '{
+    "cpf": "12345678901",
+    "ip": "192.168.1.100",
+    "deviceId": "device123",
+    "txType": "PIX",
+    "txValue": 1500.00
+  }'
+```
+
+#### 2. Health Checks
+```bash
+curl http://localhost:8080/risk-analysis/health
+curl http://localhost:8081/lists/health
+curl http://localhost:8082/decision-engine/health
+```
+
+#### 3. Gerenciamento de Regras (com JWT)
+```bash
+# Listar regras
+curl -X GET http://localhost:8082/rules \
+  -H "Authorization: Bearer <JWT_TOKEN>"
+
+# Criar nova regra
+curl -X POST http://localhost:8082/rules \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <JWT_TOKEN>" \
+  -d '{
+    "name": "Nova Regra",
+    "description": "Descrição da regra",
+    "txType": "PIX",
+    "condition": "{\"type\":\"value_range\",\"min\":\"1000\",\"max\":\"5000\"}",
+    "points": 100,
+    "active": true
+  }'
+```
 
 ## APIs Disponíveis
 
@@ -163,7 +325,17 @@ curl -X POST http://localhost:8080/risk-analysis \
   }'
 ```
 
-## Logs
+
+
+
+## Monitoramento
+
+### Logs
+- Todos os serviços geram logs detalhados
+- Nível DEBUG habilitado para desenvolvimento
+- Logs incluem informações de JWT e fluxo de requisições
+
+### Como Visualizar os Logs
 
 Os logs de cada serviço podem ser visualizados com:
 
@@ -176,9 +348,205 @@ Exemplo:
 docker-compose logs -f risk-analysis-service
 ```
 
-## Parar a Aplicação
 
-```bash
-docker-compose down
+
+### Health Checks
+- Cada serviço expõe endpoint `/health`
+- Docker Compose configurado com health checks automáticos
+
+## Desenvolvimento
+
+### Adicionando Novas Regras
+1. Criar JSON de condição no formato apropriado
+2. Usar endpoint POST `/rules` do Decision Engine Service
+3. Regras são aplicadas automaticamente no próximo cálculo
+
+### Modificando Listas
+1. Editar arquivo `lists-service/src/main/resources/lists.json`
+2. Usar endpoint POST `/lists/reload` para recarregar
+
+### Testando Localmente
+1. Usar Postman ou curl para testes
+2. Incluir header `Authorization: Bearer <token>` para serviços protegidos
+3. Verificar logs para debugging
+
+## Arquivos Importantes
+
+- `docker-compose.yml`: Orquestração dos serviços
+- `install_jq.sh`: Script de instalação do jq
+- `test_api.sh`: Script de testes automatizados
+- `test_swagger.sh`: Script de testes automatizados
+- `test_api_jwt.sh`: Script de testes automatizados
+- `architecture_diagram.png`: Diagrama da arquitetura
+- `solution-design.drawio`: Design da solução produtiva
+- `lists.json`: Dados das listas permissivas/restritivas
+- `data.sql`: Dados iniciais das regras de negócio
+
+## Considerações de Segurança
+
+- JWT com chave secreta compartilhada (adequado para ambiente interno)
+- Tokens com expiração configurável
+- Validação rigorosa de tokens em todos os endpoints protegidos
+- Health checks públicos para monitoramento
+- Logs não expõem informações sensíveis
+
+## Considerações de Desenvolvimento
+
+### Arquitetura Hexagonal
+- Separação clara entre domínio, aplicação e infraestrutura
+- Lógica de negócio isolada e testável
+- Facilita manutenção e evolução do código
+
+### Segurança JWT
+- Comunicação segura entre microsserviços
+- Autenticação baseada em tokens
+- Proteção contra acesso não autorizado
+
+### Melhorias de Design
+- Código mais modular e organizados
+- Responsabilidades bem definidas
+- Facilita testes unitários e de integração
+
+
+
+## Documentação das APIs (Swagger/OpenAPI)
+
+### Acesso à Interface Swagger UI
+
+Cada microsserviço possui sua própria documentação interativa Swagger UI, acessível após a execução dos serviços:
+
+#### URLs de Acesso:
+- **Risk Analysis Service**: http://localhost:8080/swagger-ui.html
+- **Lists Service**: http://localhost:8081/swagger-ui.html
+- **Decision Engine Service**: http://localhost:8082/swagger-ui.html
+
+#### Funcionalidades da Interface Swagger:
+- **Documentação Interativa**: Visualização de todos os endpoints disponíveis
+- **Teste de APIs**: Execução de requisições diretamente pela interface
+- **Esquemas de Dados**: Visualização dos DTOs de entrada e saída
+- **Autenticação JWT**: Interface para inserir tokens Bearer nos serviços protegidos
+- **Exemplos de Requisições**: Payloads de exemplo para facilitar os testes
+
+#### Configuração de Segurança no Swagger:
+Os serviços **Lists Service** e **Decision Engine Service** requerem autenticação JWT. Na interface Swagger:
+
+1. Clique no botão **"Authorize"** no topo da página
+2. Insira o token JWT no formato: `Bearer <seu-token-jwt>`
+3. Clique em **"Authorize"** para aplicar o token a todas as requisições
+
+#### Documentação OpenAPI (JSON):
+As especificações OpenAPI em formato JSON estão disponíveis em:
+- **Risk Analysis Service**: http://localhost:8080/v3/api-docs
+- **Lists Service**: http://localhost:8081/v3/api-docs
+- **Decision Engine Service**: http://localhost:8082/v3/api-docs
+
+### Exemplos de Uso via Swagger UI
+
+#### 1. Testando o Risk Analysis Service:
+1. Acesse http://localhost:8080/swagger-ui.html
+2. Expanda o endpoint `POST /risk-analysis`
+3. Clique em **"Try it out"**
+4. Use o payload de exemplo:
+```json
+{
+  "cpf": "12345678901",
+  "ip": "192.168.1.100",
+  "deviceId": "device123",
+  "txType": "PIX",
+  "txValue": 1500.00
+}
 ```
+5. Clique em **"Execute"** para ver a resposta
+
+#### 2. Testando o Lists Service (com JWT):
+1. Acesse http://localhost:8081/swagger-ui.html
+2. Clique em **"Authorize"** e insira um token JWT válido
+3. Expanda o endpoint `POST /lists/check`
+4. Execute a requisição com os dados desejados
+
+#### 3. Gerenciando Regras no Decision Engine Service:
+1. Acesse http://localhost:8082/swagger-ui.html
+2. Configure a autenticação JWT
+3. Use os endpoints de CRUD de regras (`/rules`)
+4. Teste o cálculo de score via `POST /decision-engine/calculate-score`
+
+
+## Desenho da Solução
+
+### Visão Geral da Arquitetura
+
+O projeto inclui um **Desenho da Solução** detalhado que aborda aspectos críticos de **resiliência**, **escalabilidade** e **alto desempenho** para ambientes de produção.
+
+### Arquivos do Desenho:
+- **`solution-design.drawio`**: Diagrama visual da arquitetura (editável no draw.io)
+- **`SOLUTION_DESIGN.md`**: Documentação técnica detalhada da solução
+
+### Como Visualizar o Desenho:
+1. **Online**: Acesse [draw.io](https://app.diagrams.net/) e abra o arquivo `solution-design.drawio`
+2. **Desktop**: Instale o draw.io desktop e abra o arquivo
+3. **VS Code**: Use a extensão "Draw.io Integration" para visualizar diretamente no editor
+
+### Principais Aspectos Abordados:
+
+#### 🚀 **Alto Volume de Transações (TPS)**
+- **Arquitetura Horizontalmente Escalável**: Múltiplas instâncias de cada microsserviço
+- **Load Balancer/API Gateway**: Distribuição inteligente de carga
+- **Auto-scaling**: Baseado em métricas de CPU, latência e throughput
+- **Target**: 10,000+ transações por segundo
+
+#### 🛡️ **Resiliência a Falhas**
+- **Circuit Breaker Pattern**: Proteção contra cascata de falhas
+- **Health Checks**: Monitoramento contínuo da saúde dos serviços
+- **Graceful Degradation**: Funcionamento parcial em caso de falhas
+- **Multi-AZ Deployment**: Tolerância a falhas de infraestrutura
+- **Disaster Recovery**: RTO < 5min, RPO < 1min
+
+#### ⚡ **Escalabilidade**
+- **Stateless Design**: Serviços sem estado para escalabilidade dinâmica
+- **Container Orchestration**: Kubernetes com Horizontal Pod Autoscaler
+- **Database Scaling**: Read replicas, connection pooling, sharding
+- **Cache Distribuído**: Redis Cluster para performance otimizada
+
+#### 📊 **Alto Desempenho**
+- **Targets de Performance**: Latência < 100ms P95, Disponibilidade 99.9%
+- **Cache Multi-Layer**: L1 (local) + L2 (distribuído)
+- **Processamento Assíncrono**: Message queues para desacoplamento
+- **Otimizações de Rede**: HTTP/2, connection pooling, compression
+
+### Componentes da Arquitetura de Produção:
+
+#### Infraestrutura:
+- **Load Balancer**: NGINX, AWS ALB, Kong API Gateway
+- **Container Platform**: Kubernetes com auto-scaling
+- **Database**: PostgreSQL/MySQL com cluster master/slave
+- **Cache**: Redis Cluster distribuído
+- **Message Queue**: Kafka/RabbitMQ para processamento assíncrono
+
+#### Monitoramento e Observabilidade:
+- **Métricas**: Prometheus + Grafana
+- **Logs**: ELK Stack (Elasticsearch, Logstash, Kibana)
+- **Tracing**: Jaeger para distributed tracing
+- **Alerting**: PagerDuty, Slack para notificações críticas
+
+#### Segurança:
+- **Network Security**: VPC, Security Groups, WAF
+- **Data Protection**: Encryption at rest/transit, PII masking
+- **Authentication**: JWT com algoritmos seguros (RS256)
+- **Compliance**: GDPR, PCI-DSS considerations
+
+### Evolução da Implementação Atual:
+
+A implementação atual (desenvolvimento) já incorpora os fundamentos da arquitetura de produção:
+- ✅ **Arquitetura Hexagonal**: Base sólida para escalabilidade
+- ✅ **Segurança JWT**: Comunicação segura entre serviços
+- ✅ **Health Checks**: Monitoramento básico implementado
+- ✅ **Containerização**: Docker pronto para orquestração
+
+### Próximos Passos para Produção:
+1. **Implementar Circuit Breakers**: Resilience4j ou Hystrix
+2. **Configurar Auto-scaling**: Kubernetes HPA
+3. **Setup de Monitoramento**: Prometheus/Grafana stack
+4. **Database Externa**: Migração do H2 para PostgreSQL/MySQL
+5. **Cache Distribuído**: Implementação do Redis Cluster
+6. **CI/CD Pipeline**: Automação de deploy e testes
 

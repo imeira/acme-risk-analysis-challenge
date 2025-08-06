@@ -33,15 +33,44 @@ public class JwtUtil {
      */
     public boolean validateToken(String token) {
         try {
-            Jwts.parserBuilder()
+            log.debug("Validating JWT token: {}", token);
+            log.debug("Signing key being used: {}", secretKey);
+            
+            // Split the token to log its parts
+            String[] parts = token.split("\\.");
+            if (parts.length != 3) {
+                log.error("Invalid JWT token format. Expected 3 parts but got {}", parts.length);
+                return false;
+            }
+            
+            log.debug("JWT Header: {}", new String(java.util.Base64.getUrlDecoder().decode(parts[0])));
+            log.debug("JWT Payload: {}", new String(java.util.Base64.getUrlDecoder().decode(parts[1])));
+            
+            // Validate the token
+            Claims claims = Jwts.parserBuilder()
                 .setSigningKey(getSigningKey())
                 .build()
-                .parseClaimsJws(token);
+                .parseClaimsJws(token)
+                .getBody();
+                
+            log.debug("Token validation successful. Claims: {}", claims);
             return true;
+            
+        } catch (io.jsonwebtoken.security.SignatureException e) {
+            log.error("Invalid JWT signature: {}", e.getMessage());
+        } catch (io.jsonwebtoken.ExpiredJwtException e) {
+            log.error("JWT token is expired: {}", e.getMessage());
+        } catch (io.jsonwebtoken.MalformedJwtException e) {
+            log.error("Invalid JWT token: {}", e.getMessage());
+        } catch (io.jsonwebtoken.UnsupportedJwtException e) {
+            log.error("JWT token is unsupported: {}", e.getMessage());
+        } catch (IllegalArgumentException e) {
+            log.error("JWT claims string is empty: {}", e.getMessage());
         } catch (Exception e) {
-            log.error("Token JWT inválido: {}", e.getMessage());
-            return false;
+            log.error("Unexpected error validating JWT token: {}", e.getMessage(), e);
         }
+        
+        return false;
     }
 
     /**
@@ -66,10 +95,20 @@ public class JwtUtil {
      */
     public boolean isTokenExpired(String token) {
         try {
+            log.debug("Checking if token is expired");
             Claims claims = getClaimsFromToken(token);
-            return claims.getExpiration().before(new Date());
+            Date expiration = claims.getExpiration();
+            Date now = new Date();
+            
+            log.debug("Token expiration: {}", expiration);
+            log.debug("Current time: {}", now);
+            log.debug("Is token expired? {}", expiration.before(now));
+            
+            return expiration.before(now);
+            
         } catch (Exception e) {
-            return true;
+            log.error("Error checking if token is expired: {}", e.getMessage());
+            return true; // If there's an error, consider the token as expired
         }
     }
 }

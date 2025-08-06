@@ -30,8 +30,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String path = request.getRequestURI();
         
-        // Permitir acesso ao health check sem autenticação
-        if (path.contains("/health")) {
+        // Permitir acesso ao health check e Swagger UI sem autenticação
+        if (path.contains("/health") || 
+            path.contains("/swagger-ui") || 
+            path.contains("/v3/api-docs") || 
+            path.contains("/swagger-resources") || 
+            path.contains("/webjars")) {
             filterChain.doFilter(request, response);
             return;
         }

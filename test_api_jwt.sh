@@ -3,14 +3,52 @@
 echo "=== Teste das APIs com JWT ==="
 echo
 
-# Função para gerar token JWT (simulação - na prática seria gerado pelo Risk Analysis Service)
-generate_jwt_token() {
-    # Este é um token JWT válido gerado com a mesma chave secreta
-    # Para testes, vamos usar um token fixo que não expira rapidamente
-    echo "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJzZXJ2aWNlLWNvbW11bmljYXRpb24iLCJpc3MiOiJyaXNrLWFuYWx5c2lzLXNlcnZpY2UiLCJpYXQiOjE2OTM1NjAwMDAsImV4cCI6OTk5OTk5OTk5OSwic2VydmljZSI6InJpc2stYW5hbHlzaXMtc2VydmljZSJ9.dummy-signature-for-testing"
+# Função para verificar se o shell script de geração de JWT existe e é executável
+check_jwt_script() {
+    if [ ! -f "./generate_jwt.sh" ]; then
+        echo "ERRO: Arquivo generate_jwt.sh não encontrado."
+        echo "Certifique-se de que o arquivo está no mesmo diretório do script."
+        exit 1
+    fi
+    
+    # Tornar o script executável
+    chmod +x ./generate_jwt.sh 2>/dev/null || true
 }
 
-JWT_TOKEN=$(generate_jwt_token)
+# Função para verificar se as dependências necessárias estão instaladas
+check_dependencies() {
+    local missing_deps=0
+    
+    if ! command -v jq &> /dev/null; then
+        echo "ERRO: 'jq' não está instalado."
+        echo "Instale com: sudo apt-get install jq (Linux) ou brew install jq (macOS)"
+        missing_deps=1
+    fi
+    
+    if ! command -v openssl &> /dev/null; then
+        echo "ERRO: 'openssl' não está instalado."
+        echo "Instale o OpenSSL no seu sistema operacional."
+        missing_deps=1
+    fi
+    
+    if [ $missing_deps -ne 0 ]; then
+        exit 1
+    fi
+}
+
+# Verificar dependências e script
+check_dependencies
+check_jwt_script
+
+# Gerar token JWT e remover quaisquer caracteres de nova linha
+JWT_TOKEN=$(./generate_jwt.sh | tr -d '[:space:]')
+
+if [ -z "$JWT_TOKEN" ]; then
+    echo "ERRO: Falha ao gerar o token JWT." >&2
+    exit 1
+fi
+
+echo "Authorization: Bearer $JWT_TOKEN"
 
 echo "1. Testando Health Checks (sem JWT)..."
 echo "Risk Analysis Service:"
