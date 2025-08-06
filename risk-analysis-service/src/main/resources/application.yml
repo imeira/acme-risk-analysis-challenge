@@ -1,0 +1,25 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: risk-analysis-service
+
+services:
+  lists:
+    url: http://lists-service:8081
+  decision-engine:
+    url: http://decision-engine-service:8082
+
+risk:
+  score:
+    low:
+      max: 399
+    medium:
+      max: 699
+
+logging:
+  level:
+    com.acme.risk.analysis: DEBUG
+    org.springframework.web.client: DEBUG
+

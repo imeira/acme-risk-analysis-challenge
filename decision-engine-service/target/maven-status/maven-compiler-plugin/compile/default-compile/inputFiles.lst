@@ -1,0 +1,12 @@
+C:\Users\meira\OneDrive\IdeaProjects\acme-risk-analysis-challenge\decision-engine-service\src\main\java\com\acme\decision\controller\RuleController.java
+C:\Users\meira\OneDrive\IdeaProjects\acme-risk-analysis-challenge\decision-engine-service\src\main\java\com\acme\decision\entity\Rule.java
+C:\Users\meira\OneDrive\IdeaProjects\acme-risk-analysis-challenge\decision-engine-service\src\main\java\com\acme\decision\service\DecisionEngineService.java
+C:\Users\meira\OneDrive\IdeaProjects\acme-risk-analysis-challenge\decision-engine-service\src\main\java\com\acme\decision\engine\RuleEngine.java
+C:\Users\meira\OneDrive\IdeaProjects\acme-risk-analysis-challenge\decision-engine-service\src\main\java\com\acme\decision\dto\ScoreCalculationResponse.java
+C:\Users\meira\OneDrive\IdeaProjects\acme-risk-analysis-challenge\decision-engine-service\src\main\java\com\acme\decision\repository\RuleRepository.java
+C:\Users\meira\OneDrive\IdeaProjects\acme-risk-analysis-challenge\decision-engine-service\src\main\java\com\acme\decision\dto\ScoreCalculationRequest.java
+C:\Users\meira\OneDrive\IdeaProjects\acme-risk-analysis-challenge\decision-engine-service\src\main\java\com\acme\decision\service\RuleService.java
+C:\Users\meira\OneDrive\IdeaProjects\acme-risk-analysis-challenge\decision-engine-service\src\main\java\com\acme\decision\dto\RuleResponse.java
+C:\Users\meira\OneDrive\IdeaProjects\acme-risk-analysis-challenge\decision-engine-service\src\main\java\com\acme\decision\DecisionEngineApplication.java
+C:\Users\meira\OneDrive\IdeaProjects\acme-risk-analysis-challenge\decision-engine-service\src\main\java\com\acme\decision\controller\DecisionEngineController.java
+C:\Users\meira\OneDrive\IdeaProjects\acme-risk-analysis-challenge\decision-engine-service\src\main\java\com\acme\decision\dto\RuleRequest.java

@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  decision-engine-service:
+    build: ./decision-engine-service
+    container_name: decision-engine-service
+    ports:
+      - "8082:8082"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    networks:
+      - acme-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/decision-engine/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  lists-service:
+    build: ./lists-service
+    container_name: lists-service
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    networks:
+      - acme-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/lists/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  risk-analysis-service:
+    build: ./risk-analysis-service
+    container_name: risk-analysis-service
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      - decision-engine-service
+      - lists-service
+    networks:
+      - acme-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/risk-analysis/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  acme-network:
+    driver: bridge
+

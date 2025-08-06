@@ -1,0 +1,11 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: lists-service
+
+logging:
+  level:
+    com.acme.lists: DEBUG
+
