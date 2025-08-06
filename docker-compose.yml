@@ -8,6 +8,10 @@ services:
       - "8082:8082"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
+      - JWT_SECRET=acme-risk-analysis-secret-key-for-internal-communication
+      - SPRING_DATASOURCE_URL=jdbc:h2:mem:testdb
+      - SPRING_DATASOURCE_USERNAME=sa
+      - SPRING_DATASOURCE_PASSWORD=password
     networks:
       - acme-network
     healthcheck:
@@ -23,6 +27,7 @@ services:
       - "8081:8081"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
+      - JWT_SECRET=acme-risk-analysis-secret-key-for-internal-communication
     networks:
       - acme-network
     healthcheck:
@@ -38,6 +43,9 @@ services:
       - "8080:8080"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
+      - JWT_SECRET=acme-risk-analysis-secret-key-for-internal-communication
+      - SERVICES_LISTS_URL=http://lists-service:8081
+      - SERVICES_DECISION_ENGINE_URL=http://decision-engine-service:8082
     depends_on:
       - decision-engine-service
       - lists-service

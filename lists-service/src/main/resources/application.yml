@@ -5,6 +5,9 @@ spring:
   application:
     name: lists-service
 
+jwt:
+  secret: acme-risk-analysis-secret-key-for-internal-communication
+
 logging:
   level:
     com.acme.lists: DEBUG

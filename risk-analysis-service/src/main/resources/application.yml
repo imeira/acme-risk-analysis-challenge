@@ -18,6 +18,10 @@ risk:
     medium:
       max: 699
 
+jwt:
+  secret: acme-risk-analysis-secret-key-for-internal-communication
+  expiration: 3600000
+
 logging:
   level:
     com.acme.risk.analysis: DEBUG
