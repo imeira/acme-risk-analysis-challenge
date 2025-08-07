@@ -223,3 +223,7 @@ Este desenho de solução foi projetado para atender aos requisitos de:
 
 A implementação atual (versão de desenvolvimento) serve como base sólida para evolução para esta arquitetura de produção, mantendo os princípios de arquitetura hexagonal e segurança JWT já implementados.
 
+
+---
+
+Desenvolvido por Igor Meira - [meira.igor@gmail.com](mailto:meira.igor@gmail.com)

@@ -653,3 +653,7 @@ A implementação atual (desenvolvimento) já incorpora os fundamentos da arquit
 5. **Cache Distribuído**: Implementação do Redis Cluster
 6. **CI/CD Pipeline**: Automação de deploy e testes
 
+
+---
+
+Desenvolvido por Igor Meira - [meira.igor@gmail.com](mailto:meira.igor@gmail.com)
