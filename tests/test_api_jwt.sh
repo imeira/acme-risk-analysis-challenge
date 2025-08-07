@@ -3,18 +3,6 @@
 echo "=== Teste das APIs com JWT ==="
 echo
 
-# Função para verificar se o shell script de geração de JWT existe e é executável
-check_jwt_script() {
-    if [ ! -f "./generate_jwt.sh" ]; then
-        echo "ERRO: Arquivo generate_jwt.sh não encontrado."
-        echo "Certifique-se de que o arquivo está no mesmo diretório do script."
-        exit 1
-    fi
-    
-    # Tornar o script executável
-    chmod +x ./generate_jwt.sh 2>/dev/null || true
-}
-
 # Função para verificar se as dependências necessárias estão instaladas
 check_dependencies() {
     local missing_deps=0
@@ -25,9 +13,9 @@ check_dependencies() {
         missing_deps=1
     fi
     
-    if ! command -v openssl &> /dev/null; then
-        echo "ERRO: 'openssl' não está instalado."
-        echo "Instale o OpenSSL no seu sistema operacional."
+    if ! command -v curl &> /dev/null; then
+        echo "ERRO: 'curl' não está instalado."
+        echo "Instale o cURL no seu sistema operacional."
         missing_deps=1
     fi
     
@@ -36,18 +24,30 @@ check_dependencies() {
     fi
 }
 
-# Verificar dependências e script
+# Verificar dependências
 check_dependencies
-check_jwt_script
 
-# Gerar token JWT e remover quaisquer caracteres de nova linha
-JWT_TOKEN=$(./generate_jwt.sh | tr -d '[:space:]')
+# Obter token JWT do serviço de autenticação
+echo "Obtendo token JWT do serviço de autenticação..."
+RESPONSE=$(curl -s "http://localhost:8080/auth/token?clientId=7f073c43-d91b-4138-b7f0-85f8d73490bf")
+echo "RESPONSE= $RESPONSE"
 
-if [ -z "$JWT_TOKEN" ]; then
-    echo "ERRO: Falha ao gerar o token JWT." >&2
+if [ $? -ne 0 ]; then
+    echo "ERRO: Falha ao obter o token JWT do serviço de autenticação." >&2
+    echo "Certifique-se de que o serviço Risk Analysis está em execução." >&2
     exit 1
 fi
 
+# Extrair o token da resposta
+JWT_TOKEN=$(echo "$RESPONSE" | jq -r '.token' 2>/dev/null)
+
+if [ -z "$JWT_TOKEN" ] || [ "$JWT_TOKEN" = "null" ]; then
+    echo "ERRO: Resposta inesperada do serviço de autenticação:" >&2
+    echo "$RESPONSE" >&2
+    exit 1
+fi
+
+echo "Token JWT obtido com sucesso!"
 echo "Authorization: Bearer $JWT_TOKEN"
 
 echo "1. Testando Health Checks (sem JWT)..."
@@ -105,7 +105,7 @@ curl -X POST http://localhost:8080/risk-analysis \
 echo
 echo
 
-echo "5. Testando acesso sem JWT (deve falhar)..."
+echo "5. Testando acesso sem JWT (deve falhar!!!)..."
 echo "Lists Service sem JWT:"
 curl -X POST http://localhost:8081/lists/check \
   -H "Content-Type: application/json" \

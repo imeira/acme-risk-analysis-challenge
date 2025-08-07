@@ -22,6 +22,7 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(authz -> authz
                 .requestMatchers("/risk-analysis/**").permitAll()
+                .requestMatchers("/auth/**").permitAll() // Permitir acesso aos endpoints de autenticação
                 .requestMatchers("/actuator/**").permitAll()
                 // Permitir acesso público ao Swagger UI e documentação OpenAPI
                 .requestMatchers("/swagger-ui/**").permitAll()

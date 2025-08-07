@@ -471,6 +471,109 @@ As especificações OpenAPI em formato JSON estão disponíveis em:
 4. Teste o cálculo de score via `POST /decision-engine/calculate-score`
 
 
+## 🎯 **Gerando Token JWT**
+
+Adicionado endpoint GET para gerar tokens JWT baseado em client_id específicos, facilitando os testes através da interface do Swagger UI.
+
+## 🔧 **Implementação Técnica**
+
+### **1. Endpoints Criados para Autenticação**
+
+#### **GET /auth/token**
+- **Descrição**: Gera token JWT válido baseado no client_id
+- **Parâmetro**: `clientId` (query parameter)
+- **Resposta**: Token JWT com informações do serviço
+
+#### **GET /auth/client-ids**
+- **Descrição**: Lista todos os client_ids válidos e seus serviços
+- **Resposta**: Mapeamento client_id → nome do serviço
+
+### **2. Client IDs Configurados**
+
+| Client ID | Serviço |
+|-----------|---------|
+| `7f073c43-d91b-4138-b7f0-85f8d73490bf` | lists-service |
+| `a1b2c3d4-e5f6-7890-abcd-ef1234567890` | decision-engine-service |
+| `12345678-90ab-cdef-1234-567890abcdef` | risk-analysis-service |
+
+### **3. Arquivos Criados**
+
+#### **Nomes dos Arquivos:**
+- `TokenRequest.java` - DTO para requisição de token
+- `TokenResponse.java` - DTO para resposta de token
+- `TokenService.java` - Serviço de domínio para gerenciamento de tokens
+- `TokenController.java` - Controller com endpoints de autenticação
+- `SecurityConfig.java` - Adicionada rota `/auth/**` como pública
+- `OpenApiConfig.java` - Documentação atualizada com instruções de uso
+
+## 🧪 **Testes Realizados**
+
+### ✅ **Testes de Funcionalidade**
+```bash
+# Gerar token válido
+curl "http://localhost:8080/auth/token?clientId=7f073c43-d91b-4138-b7f0-85f8d73490bf"
+# Resposta: {"token":"eyJ...", "tokenType":"Bearer", "expiresIn":3600, ...}
+
+# Listar client IDs válidos
+curl "http://localhost:8080/auth/client-ids"
+# Resposta: {"7f073c43...":"lists-service", "a1b2c3d4...":"decision-engine-service", ...}
+
+# Testar client ID inválido
+curl "http://localhost:8080/auth/token?clientId=invalid-client-id"
+# Resposta: {"error":"Client ID inválido: invalid-client-id"}
+```
+
+### ✅ **Swagger UI Acessível**
+- Risk Analysis Service: http://localhost:8080/swagger-ui.html ✅
+- Documentação completa dos novos endpoints ✅
+- Exemplos de client_ids na documentação ✅
+
+## 🚀 **Como Usar no Swagger UI**
+
+### **Passo 1: Gerar Token**
+1. Acesse http://localhost:8080/swagger-ui.html
+2. Vá para a seção "Autenticação"
+3. Use o endpoint `GET /auth/token`
+4. Insira um client_id válido (ex: `7f073c43-d91b-4138-b7f0-85f8d73490bf`)
+5. Execute e copie o token retornado
+
+### **Passo 2: Usar Token nas APIs Protegidas**
+1. Vá para qualquer endpoint protegido (Lists Service ou Decision Engine)
+2. Clique em "Authorize" no Swagger UI
+3. Cole o token no formato: `Bearer <token>`
+4. Agora pode testar as APIs protegidas!
+
+## 📋 **Exemplo de Resposta do Token**
+
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJzZXJ2aWNlLWNvbW11bmljYXRpb24iLCJpc3MiOiJsaXN0cy1zZXJ2aWNlIiwiaWF0IjoxNzU0NTE5MTgxLCJleHAiOjE3NTQ1MjI3ODEsInNlcnZpY2UiOiJsaXN0cy1zZXJ2aWNlIn0.gIHoij01e66U2XZl5mhSUH1XXREwlPjcHetJh5hLFkw",
+  "tokenType": "Bearer",
+  "expiresIn": 3600,
+  "clientId": "7f073c43-d91b-4138-b7f0-85f8d73490bf",
+  "serviceName": "lists-service"
+}
+```
+
+## 🔒 **Segurança**
+
+- ✅ **Validação de Client ID**: Apenas client_ids pré-configurados são aceitos
+- ✅ **Tokens com Expiração**: Tokens válidos por 1 hora (3600 segundos)
+- ✅ **Endpoint Público**: `/auth/**` acessível sem autenticação para facilitar testes
+- ✅ **Tratamento de Erros**: Mensagens claras para client_ids inválidos
+
+
+## 🎉 **Benefícios da Rota de Autenticação**
+
+1. **Facilita Testes**: Não precisa mais gerar tokens manualmente
+2. **Interface Amigável**: Tudo integrado no Swagger UI
+3. **Segurança Mantida**: Apenas client_ids válidos funcionam
+4. **Documentação Clara**: Instruções diretas na interface
+5. **Produtividade**: Desenvolvedores podem testar APIs rapidamente
+
+
+
+
 ## Desenho da Solução
 
 ### Visão Geral da Arquitetura
