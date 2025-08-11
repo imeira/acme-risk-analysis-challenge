@@ -6,6 +6,8 @@ Este documento apresenta o desenho detalhado da solução de análise de risco d
 
 ## Arquitetura de Alto Nível
 
+![solution-design.jpg](solution-design.jpg)
+
 ### Componentes Principais
 
 #### 1. Load Balancer / API Gateway
